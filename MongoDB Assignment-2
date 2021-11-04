@@ -1,0 +1,68 @@
+1. Find all the topics and tasks which are thought in the month of October
+db.topics.aggregate(
+    {$project : {_id : 0}},
+    {$match : {end_date : {$gte : ISODate("2020-10-01"), $lte : ISODate("2020-10-31") }}},
+    {
+    $lookup :{
+        from : "tasks",
+        localField : "task_id",
+        foreignField : "id",
+        as : "Task Info",
+        pipeline : [
+            {$match : {task_given_date : {$gte : ISODate("2020-10-01"), $lte : ISODate("2020-10-31") }}},
+            {$project : {_id : 0, id: 0 }},
+            ]
+}}
+)
+
+2. Find the number of problems solved by the user in codekata
+db.users.aggregate(
+     {
+        $lookup :{
+        from : "codekata",
+        localField : "userId",
+        foreignField : "userId",
+        as : "codekata_info",
+        pipeline : [{$project : {_id : 0, userId : 1, NoOfProblesSolved : 1}}]
+        }
+   } )
+
+
+3. Find all the company drives which appeared between 15 oct-2020 and 31-oct-2020
+db.company_drives.find({drive_date : {$gte : ISODate("2020-10-15"), $lte : ISODate("2020-10-31")}});
+
+4. Find all the company drives and students who are appeared for the placement.
+db.company_drives.aggregate({
+    $lookup : {
+        from : "users",
+        localField : "stud_ids",
+        foreignField : "userId",
+        as : "Student Info",
+        pipeline : [{$project : {_id : 0,userId : 0, companies_attended :0 }}]
+    }
+})
+
+5. Find all the mentors with who has the mentee's count more than 15
+db.mentors.find({noOfMentees : {$gte : 15}})
+
+6. Find the number of users who are absent and task is not submitted  between 15 oct-2020 and 31-oct-2020
+db.users.aggregate(
+    {
+    $lookup :{
+        from : "attendance",
+        localField : "id",
+        foreignField : "attendance_id",
+        as : "Attendance Info",
+        pipeline : [
+           $match : {
+		$and : [
+			{Presenty_Status : "A"}, 
+			{class_date : {$gte : ISODate("2020-10-15"), $lte : ISODate("2020-10-31") }},
+			{task_submitted : "No"}}
+		]
+	 }  
+            ]       
+}}
+)
+
+
